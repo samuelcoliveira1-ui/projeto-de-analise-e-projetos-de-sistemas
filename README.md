@@ -24,8 +24,8 @@ Os resultados dos projetos devem obedecer ao Aviso Legal disponível no site da 
 
 | Função | Nome | LinkedIn & GitHub |
 | :--- | :--- | :--- |
-| Product Owner | [Seu Nome / Aluno 1] | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
-| Scrum Master | [Nome do Aluno 2] | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
+| Product Owner | Lucas | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
+| Scrum Master | Davi | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
 | Team Member / Dev | Samuel da Costa OLiveira | Não possui LinkedIn / [GitHub](https://github.com/samuelcoliveira1-ui) |
 
 ---
