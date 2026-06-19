@@ -24,7 +24,7 @@ Os resultados dos projetos devem obedecer ao Aviso Legal disponível no site da 
 
 | Função | Nome | LinkedIn & GitHub |
 | :--- | :--- | :--- |
-| Product Owner | Lucas | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
+| Product Owner | Lucas T. | [LinkedIn](URL_AQUI) / [GitHub](https://github.com/Turibi) |
 | Scrum Master | Davi | [LinkedIn](URL_AQUI) / [GitHub](URL_AQUI) |
 | Team Member / Dev | Samuel da Costa OLiveira | Não possui LinkedIn / [GitHub](https://github.com/samuelcoliveira1-ui) |
 
