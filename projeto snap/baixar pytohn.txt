@@ -1,0 +1,3 @@
+winget install Python.Python.3.12
+
+Feche o VS Code por completo.Abra o VS Code novamente. (Esse passo é obrigatório para que o VS Code reconheça os novos caminhos do Python que foram gravados no sistema).Abra o terminal novamente e digite para testar:python --version

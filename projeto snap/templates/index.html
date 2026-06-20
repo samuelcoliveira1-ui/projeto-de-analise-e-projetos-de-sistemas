@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Snaptube Pro Web com Player</title>
+    <script src="https://cdn.socket.io/4.7.2/socket.io.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0f172a; margin: 0; padding: 20px; color: #f8fafc; }
+        .container { max-width: 900px; margin: 0 auto; background: #1e293b; padding: 30px; border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); }
+        h1 { text-align: center; color: #ff4757; margin-bottom: 25px; }
+        label { font-weight: bold; display: block; margin-bottom: 8px; color: #cbd5e1; }
+        input[type="url"] { width: 100%; padding: 14px; border: 2px solid #334155; background: #0f172a; color: white; border-radius: 8px; box-sizing: border-box; font-size: 16px; margin-bottom: 15px; }
+        .radio-group { display: flex; gap: 20px; margin: 15px 0; }
+        .radio-option { background: #334155; padding: 12px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; gap: 8px; width: 100%; justify-content: center; }
+        button { width: 100%; background-color: #ff4757; color: white; border: none; padding: 14px; font-size: 18px; font-weight: bold; border-radius: 8px; cursor: pointer; transition: 0.2s; }
+        button:hover { background-color: #e84118; }
+        
+        /* Estilos do Painel de Progresso */
+        #painel-progresso { display: none; background: #0f172a; padding: 20px; border-radius: 10px; margin-top: 20px; border: 1px solid #334155; }
+        .barra-container { background: #334155; width: 100%; height: 20px; border-radius: 10px; overflow: hidden; margin: 10px 0; }
+        .barra-preenchimento { background: #2ed573; width: 0%; height: 100%; transition: width 0.1s linear; }
+        .status-dados { display: flex; justify-content: space-between; font-size: 14px; color: #94a3b8; }
+
+        /* Estilos do Mini Player */
+        #container-player { display: none; background: #0f172a; padding: 25px; border-radius: 12px; margin-top: 25px; text-align: center; border: 2px solid #ff4757; }
+        #container-player h3 { margin-top: 0; color: #ff4757; font-size: 16px; }
+        #player-video { max-width: 100%; max-height: 300px; border-radius: 8px; display: none; margin: 0 auto; }
+        #player-audio { width: 100%; display: none; }
+
+        /* Estilos da Biblioteca */
+        .biblioteca { margin-top: 40px; border-top: 2px solid #334155; padding-top: 20px; }
+        .colunas { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+        .coluna { background: #1e293b; padding: 15px; border-radius: 10px; border: 1px solid #334155; }
+        .coluna h3 { border-bottom: 2px solid #475569; padding-bottom: 8px; margin-top: 0; color: #f1f5f9; }
+        ul { list-style: none; padding: 0; }
+        li { padding: 12px; background: #0f172a; margin-bottom: 8px; border-radius: 8px; display: flex; flex-direction: column; gap: 8px; }
+        .filename { font-size: 13px; word-break: break-all; color: #cbd5e1; }
+        .botoes-acoes { display: flex; gap: 8px; }
+        .btn-play { background: #2ed573; color: white; border: none; padding: 6px 12px; font-size: 12px; border-radius: 4px; cursor: pointer; flex: 1; text-align: center; font-weight: bold;}
+        .btn-download { background: #3b82f6; color: white; text-decoration: none; padding: 6px 12px; font-size: 12px; border-radius: 4px; text-align: center; font-weight: bold; flex: 1;}
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🎬 Mini Snaptube Pro Web</h1>
+
+    <div class="form-group">
+        <label for="url">Cole o Link do Vídeo:</label>
+        <input type="url" id="url" placeholder="Insira o link aqui..." required>
+    </div>
+
+    <div class="radio-group">
+        <label class="radio-option"><input type="radio" name="opcao" value="1" checked> 🎵 MP3 (Áudio)</label>
+        <label class="radio-option"><input type="radio" name="opcao" value="2"> 📹 MP4 (Vídeo)</label>
+    </div>
+    <button id="btn-iniciar" onclick="enviarDownload()">Iniciar Download</button>
+
+    <div id="painel-progresso">
+        <div id="status-texto" style="font-weight: bold; color: #2ed573;">Conectando ao servidor...</div>
+        <div class="barra-container">
+            <div id="barra" class="barra-preenchimento"></div>
+        </div>
+        <div class="status-dados">
+            <span id="txt-porcentagem">Porcentagem: 0%</span>
+            <span id="txt-velocidade">Velocidade: 0 B/s</span>
+            <span id="txt-tempo">Restando: --:--</span>
+        </div>
+    </div>
+
+    <div id="container-player">
+        <h3 id="player-titulo">Tocando: Nenhuma mídia selecionada</h3>
+        <audio id="player-audio" controls></audio>
+        <video id="player-video" controls></video>
+    </div>
+
+    <div class="biblioteca">
+        <h2>📚 Sua Biblioteca de Mídias</h2>
+        <div class="colunas">
+            
+            <div class="coluna">
+                <h3>🎵 Músicas Salvas</h3>
+                <ul>
+                    {% for musica in musicas %}
+                        <li>
+                            <span class="filename">{{ musica }}</span>
+                            <div class="botoes-acoes">
+                                <button class="btn-play" onclick="carregarPlayer('mp3', '{{ musica }}')">▶ Ouvir</button>
+                                <a href="/midia/mp3/{{ musica }}" download class="btn-download">💾 Baixar</a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <div class="coluna">
+                <h3>📹 Vídeos Salvos</h3>
+                <ul>
+                    {% for video in videos %}
+                        <li>
+                            <span class="filename">{{ video }}</span>
+                            <div class="botoes-acoes">
+                                <button class="btn-play" onclick="carregarPlayer('mp4', '{{ video }}')">▶ Assistir</button>
+                                <a href="/midia/mp4/{{ video }}" download class="btn-download">💾 Baixar</a>
+                            </div>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+        </div>
+    </div>
+</div>
+
+<script>
+    // Inicializa a conexão em tempo real com o Python
+    const socket = io();
+
+    function enviarDownload() {
+        const urlStr = document.getElementById('url').value;
+        const opcaoStr = document.querySelector('input[name="opcao"]:checked').value;
+
+        if(!urlStr) { alert("Insira uma URL!"); return; }
+
+        // Mostra a barra de progresso e desabilita o botão para evitar cliques duplos
+        document.getElementById('painel-progresso').style.display = 'block';
+        document.getElementById('btn-iniciar').disabled = true;
+        document.getElementById('status-texto').innerText = "Iniciando processo do yt-dlp...";
+
+        // Envia o pedido de download para o Python via Socket
+        socket.emit('iniciar_download_evento', { url: urlStr, opcao: opcaoStr });
+    }
+
+    // Escuta as atualizações de progresso vindas do Python segundo a segundo
+    socket.on('progresso_download', function(dados) {
+        document.getElementById('barra').style.width = dados.p_num + '%';
+        document.getElementById('txt-porcentagem').innerText = "Progresso: " + dados.porcentagem;
+        document.getElementById('txt-velocidade').innerText = "Velocidade: " + dados.velocidade;
+        document.getElementById('txt-tempo').innerText = "Restando: " + dados.tempo;
+        document.getElementById('status-texto').innerText = dados.status;
+    });
+
+    // Escuta o aviso de fim de download
+    socket.on('download_concluido', function(dados) {
+        alert(dados.msg);
+        // Recarrega a página para atualizar a lista da biblioteca com o novo arquivo
+        window.location.reload();
+    });
+
+    // Função do Mini Player Dinâmico
+    function carregarPlayer(tipo, nomeArquivo) {
+        const playerAudio = document.getElementById('player-audio');
+        const playerVideo = document.getElementById('player-video');
+        const container = document.getElementById('container-player');
+        const titulo = document.getElementById('player-titulo');
+
+        container.style.display = 'block';
+        titulo.innerText = "Reproduzindo: " + nomeArquivo;
+
+        // Reseta ambos os players antes de ativar o correto
+        playerAudio.style.display = 'none';
+        playerAudio.pause();
+        playerVideo.style.display = 'none';
+        playerVideo.pause();
+
+        if (tipo === 'mp3') {
+            playerAudio.src = "/midia/mp3/" + encodeURIComponent(nomeArquivo);
+            playerAudio.style.display = 'block';
+            playerAudio.load();
+            playerAudio.play();
+        } else if (tipo === 'mp4') {
+            playerVideo.src = "/midia/mp4/" + encodeURIComponent(nomeArquivo);
+            playerVideo.style.display = 'block';
+            playerVideo.load();
+            playerVideo.play();
+        }
+        
+        // Rola a tela suavemente até o player para o usuário ver tocando
+        container.scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
